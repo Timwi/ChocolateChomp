@@ -1,282 +1,283 @@
 ﻿<!doctype html>
 <html>
-    <head>
-        <title>Chocolate Chomp</title>
-        <style>
-            table { border-spacing: 5px; }
-            .chunk { width: 125px; height: 125px; }
-            #lost, #won {
-                font-size: 4000%;
-                text-align: center;
-                display: none;
-            }
-            #lost { font-family: "Segoe UI Symbol"; }
-            #won { font-family: "Meiryo UI"; }
-        </style>
-        <script src="jquery.min.js"></script>
-        <script src="jquery-ui.min.js"></script>
-        <script>
-            $(function()
-            {
-                $('#btn_startgame').click(function()
-                {
-                    var width  = parseInt($('#width').val());
-                    var height = parseInt($('#height').val());
-                    var player = 0;
-                    var numPlayers = 2;
-                    var canPlay = true;
+	<head>
+		<title>Chocolate Chomp</title>
+		<style>
+			table { border-spacing: 5px; }
+			.chunk { width: 125px; height: 125px; }
+			#lost, #won {
+				font-size: 4000%;
+				text-align: center;
+				display: none;
+			}
+			#lost { font-family: "Segoe UI Symbol"; }
+			#won { font-family: "Meiryo UI"; }
+			#game td, #game img { position: relative; }
+		</style>
+		<script src="jquery.min.js"></script>
+		<script src="jquery-ui.min.js"></script>
+		<script>
+			$(function()
+			{
+				$('#btn_startgame').click(function()
+				{
+					var width  = parseInt($('#width').val());
+					var height = parseInt($('#height').val());
+					var player = 0;
+					var numPlayers = 2;
+					var canPlay = true;
 
-                    var ai = $('#ai').is(':checked');
+					var ai = $('#ai').is(':checked');
 
-                    function createArray(len, value)
-                    {
-                        var result = new Array(len);
-                        for (var i = 0; i < len; i++)
-                            result[i] = value;
-                        return result;
-                    }
+					function createArray(len, value)
+					{
+						var result = new Array(len);
+						for (var i = 0; i < len; i++)
+							result[i] = value;
+						return result;
+					}
 
-                    function chomp(w, h)
-                    {
-                        var result = 1;
-                        for (var i = 1; i <= w; i++)
-                            result = result * (i + h) / i;
-                        return result;
-                    }
+					function chomp(w, h)
+					{
+						var result = 1;
+						for (var i = 1; i <= w; i++)
+							result = result * (i + h) / i;
+						return result;
+					}
 
-                    function board2state(board)
-                    {
-                        var width = board.length;
-                        var result = 0;
-                        for (var i = 0; i < width; i++)
-                        {
-                            if (board[i] == 0)
-                                return result;
-                            result += chomp(width - i, board[i] - 1);
-                        }
-                        return result;
-                    }
+					function board2state(board)
+					{
+						var width = board.length;
+						var result = 0;
+						for (var i = 0; i < width; i++)
+						{
+							if (board[i] == 0)
+								return result;
+							result += chomp(width - i, board[i] - 1);
+						}
+						return result;
+					}
 
-                    function state2board(state, width)
-                    {
-                        var result = createArray(width, 0);
-                        while (state != 0)
-                        {
-                            var h = 1, colState = 1;
-                            while (true)
-                            {
-                                var nextState = colState * (width + h) / h;
-                                if (nextState > state)
-                                    break;
-                                colState = nextState;
-                                h++;
-                            }
-                            result[result.length - width] = h;
-                            state -= colState;
-                            width--;
-                        }
-                        return result;
-                    }
+					function state2board(state, width)
+					{
+						var result = createArray(width, 0);
+						while (state != 0)
+						{
+							var h = 1, colState = 1;
+							while (true)
+							{
+								var nextState = colState * (width + h) / h;
+								if (nextState > state)
+									break;
+								colState = nextState;
+								h++;
+							}
+							result[result.length - width] = h;
+							state -= colState;
+							width--;
+						}
+						return result;
+					}
 
-                    function advanceToNextBoard(board)
-                    {
-                        var width = board.length;
-                        var lastColumnHeight = board[width - 1];
-                        var i = width - 2;
-                        while (i >= 0 && board[i] == lastColumnHeight)
-                            i--;
-                        i++;
-                        board[i]++;
-                        i++;
-                        while (i < width)
-                        {
-                            board[i] = 0;
-                            i++;
-                        }
-                    }
+					function advanceToNextBoard(board)
+					{
+						var width = board.length;
+						var lastColumnHeight = board[width - 1];
+						var i = width - 2;
+						while (i >= 0 && board[i] == lastColumnHeight)
+							i--;
+						i++;
+						board[i]++;
+						i++;
+						while (i < width)
+						{
+							board[i] = 0;
+							i++;
+						}
+					}
 
-                    if (ai)
-                    {
-                        var total = chomp(width, height);
-                        var winning = createArray(total, false);
-                        winning[0] = true;
-                        var index = 0;
-                        for (; index < total; index++)
-                        {
-                            if (winning[index])
-                                continue;
+					if (ai)
+					{
+						var total = chomp(width, height);
+						var winning = createArray(total, false);
+						winning[0] = true;
+						var index = 0;
+						for (; index < total; index++)
+						{
+							if (winning[index])
+								continue;
 
-                            var board = state2board(index, width);
+							var board = state2board(index, width);
 
-                            // Find the first column that is smaller than height
-                            var i = 0;
-                            while (i < width && board[i] == height)
-                                i++;
+							// Find the first column that is smaller than height
+							var i = 0;
+							while (i < width && board[i] == height)
+								i++;
 
-                            // Identify each of the "stairs" the board consists of
-                            if (i < width)
-                            {
-                                var prevI = i;
-                                var prevCol = board[i];
-                                while (i <= width)
-                                {
-                                    // Act as if there was a negative column on the right so that we perceive the last column as a step down, even if it's zero
-                                    var col = i < width ? board[i] : -1;
+							// Identify each of the "stairs" the board consists of
+							if (i < width)
+							{
+								var prevI = i;
+								var prevCol = board[i];
+								while (i <= width)
+								{
+									// Act as if there was a negative column on the right so that we perceive the last column as a step down, even if it's zero
+									var col = i < width ? board[i] : -1;
 
-                                    // We found the edge of a stair
-                                    if (col != prevCol)
-                                    {
-                                        var stairWidth = i - prevI;
-                                        // Act as if there was a full-height column on the left so that we fully fill the first stair
-                                        var stairHeight = (prevI == 0 ? height : board[prevI - 1]) - prevCol;
-                                        var stairTotal = chomp(stairWidth, stairHeight);
-                                        var stairBoard = createArray(stairWidth, 0);
+									// We found the edge of a stair
+									if (col != prevCol)
+									{
+										var stairWidth = i - prevI;
+										// Act as if there was a full-height column on the left so that we fully fill the first stair
+										var stairHeight = (prevI == 0 ? height : board[prevI - 1]) - prevCol;
+										var stairTotal = chomp(stairWidth, stairHeight);
+										var stairBoard = createArray(stairWidth, 0);
 
-                                        // Iterate through all the possible positions of the relevant size, place them in this stair, and then mark that as a winning position
-                                        for (var stairPos = 1; stairPos < stairTotal; stairPos++)
-                                        {
-                                            advanceToNextBoard(stairBoard);
-                                            for (var x = prevI; x < i; x++)
-                                                board[x] = prevCol + stairBoard[x - prevI];
-                                            winning[board2state(board)] = true;
-                                        }
+										// Iterate through all the possible positions of the relevant size, place them in this stair, and then mark that as a winning position
+										for (var stairPos = 1; stairPos < stairTotal; stairPos++)
+										{
+											advanceToNextBoard(stairBoard);
+											for (var x = prevI; x < i; x++)
+												board[x] = prevCol + stairBoard[x - prevI];
+											winning[board2state(board)] = true;
+										}
 
-                                        // Return the stair to its original configuration
-                                        for (var x = prevI; x < i; x++)
-                                            board[x] = prevCol;
+										// Return the stair to its original configuration
+										for (var x = prevI; x < i; x++)
+											board[x] = prevCol;
 
-                                        prevCol = col;
-                                        prevI = i;
-                                    }
-                                    i++;
-                                }
-                            }
-                        }
-                    }
+										prevCol = col;
+										prevI = i;
+									}
+									i++;
+								}
+							}
+						}
+					}
 
-                    var tableHtml = ['<table>'];
-                    for (var r = 0; r < height; r++)
-                    {
-                        tableHtml.push('<tr>');
-                        for (var c = 0; c < width; c++)
-                            tableHtml.push('<td class="chunk"><img src="Chunk.png" id="c' + c + '_' + (height-1-r) + '"></td>');
-                        tableHtml.push('</tr>');
-                    }
-                    tableHtml.push('</table>');
+					var tableHtml = ['<table>'];
+					for (var r = 0; r < height; r++)
+					{
+						tableHtml.push('<tr>');
+						for (var c = 0; c < width; c++)
+							tableHtml.push('<td class="chunk"><img src="Chunk.png" id="c' + c + '_' + (height-1-r) + '"></td>');
+						tableHtml.push('</tr>');
+					}
+					tableHtml.push('</table>');
 
-                    $('#game').html(tableHtml.join(''));
-                    $('#startgame').hide();
-                    $('#c0_0').attr('src', 'PoisonedChunk.png');
+					$('#game').html(tableHtml.join(''));
+					$('#startgame').hide();
+					$('#c0_0').attr('src', 'PoisonedChunk.png');
 
-                    for (var r = 0; r < height; r++)
-                        for (var c = 0; c < width; c++)
-                            $('#c' + c + '_' + r).data('x', c).data('y', r);
+					for (var r = 0; r < height; r++)
+						for (var c = 0; c < width; c++)
+							$('#c' + c + '_' + r).data('x', c).data('y', r);
 
-                    function computerPlay(x, y)
-                    {
-                        canPlay = false;
-                        $('#c' + x + '_' + y).effect("bounce", { direction: 'down', times: 5 }, 1000, function()
-                        {
-                            canPlay = true;
-                            play(x, y);
-                        });
-                    }
+					function computerPlay(x, y)
+					{
+						canPlay = false;
+						$('#c' + x + '_' + y).effect("bounce", { direction: 'down', times: 5 }, 1000, function()
+						{
+							canPlay = true;
+							play(x, y);
+						});
+					}
 
-                    function play(x, y)
-                    {
-                        for (var r = y; r < height; r++)
-                            for (var c = x; c < width; c++)
-                                $('#c' + c + '_' + r).hide();
-                        player = (player + 1) % numPlayers;
+					function play(x, y)
+					{
+						for (var r = y; r < height; r++)
+							for (var c = x; c < width; c++)
+								$('#c' + c + '_' + r).hide();
+						player = (player + 1) % numPlayers;
 
-                        if (x === 0 && y === 0)
-                        {
-                            $('#game').hide();
-                            if (ai && (player === 0))
-                                $('#won').show();
-                            else
-                                $('#lost').show();
-                        }
-                        else if (ai && (player === 1))
-                        {
-                            var curBoard = [];
-                            for (var c = 0; c < width; c++)
-                            {
-                                var col = 0;
-                                for (var r = 0; r < height; r++)
-                                if ($('#c' + c + '_' + r).is(':visible'))
-                                    col++;
-                                curBoard.push(col);
-                            }
+						if (x === 0 && y === 0)
+						{
+							$('#game').hide();
+							if (ai && (player === 0))
+								$('#won').show();
+							else
+								$('#lost').show();
+						}
+						else if (ai && (player === 1))
+						{
+							var curBoard = [];
+							for (var c = 0; c < width; c++)
+							{
+								var col = 0;
+								for (var r = 0; r < height; r++)
+								if ($('#c' + c + '_' + r).is(':visible'))
+									col++;
+								curBoard.push(col);
+							}
 
-                            var moves = [];
-                            for (var c = 0; c < width; c++)
-                            {
-                                for (var r = 0; r < height; r++)
-                                {
-                                    if (!$('#c' + c + '_' + r).is(':visible'))
-                                        continue;
-                                    var clone = curBoard.slice(0);
-                                    for (var cc = c; cc < width; cc++)
-                                        clone[cc] = clone[cc] > r ? r : clone[cc];
-                                    if (!winning[board2state(clone)])
-                                    {
-                                        computerPlay(c, r);
-                                        return;
-                                    }
-                                    if (r == height-1 || !$('#c' + c + '_' + (r+1)).is(':visible') || c == width-1 || !$('#c' + (c+1) + '_' + r).is(':visible'))
-                                        moves.push({ x: c, y: r });
-                                }
-                            }
-                            var move = moves[Math.floor(Math.random() * moves.length)];
-                            computerPlay(move.x, move.y);
-                        }
-                    }
+							var moves = [];
+							for (var c = 0; c < width; c++)
+							{
+								for (var r = 0; r < height; r++)
+								{
+									if (!$('#c' + c + '_' + r).is(':visible'))
+										continue;
+									var clone = curBoard.slice(0);
+									for (var cc = c; cc < width; cc++)
+										clone[cc] = clone[cc] > r ? r : clone[cc];
+									if (!winning[board2state(clone)])
+									{
+										computerPlay(c, r);
+										return;
+									}
+									if (r == height-1 || !$('#c' + c + '_' + (r+1)).is(':visible') || c == width-1 || !$('#c' + (c+1) + '_' + r).is(':visible'))
+										moves.push({ x: c, y: r });
+								}
+							}
+							var move = moves[Math.floor(Math.random() * moves.length)];
+							computerPlay(move.x, move.y);
+						}
+					}
 
-                    $('img').click(function(obj)
-                    {
-                        if (!canPlay)
-                            return;
-                        var x = $(obj.target).data('x');
-                        var y = $(obj.target).data('y');
-                        play(x, y);
-                        return false;
-                    });
+					$('img').click(function(obj)
+					{
+						if (!canPlay)
+							return;
+						var x = $(obj.target).data('x');
+						var y = $(obj.target).data('y');
+						play(x, y);
+						return false;
+					});
 
-                    return false;
-                });
-            });
-        </script>
-    </head>
-    <body>
-        <div id='startgame'>
-            <table>
-                <tr>
-                    <td>Width:</td>
-                    <td><input type='text' id='width'></td>
-                </tr>
-                <tr>
-                    <td>Height:</td>
-                    <td><input type='text' id='height'></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <input id='ai' type='checkbox'>
-                        Play against the computer
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <button id='btn_startgame' accesskey='s'><u>S</u>tart Game</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div id='game'></div>
-        <div id='won'>✌</div>
-        <div id='lost'>☠</div>
-    </body>
+					return false;
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id='startgame'>
+			<table>
+				<tr>
+					<td>Width:</td>
+					<td><input type='text' id='width'></td>
+				</tr>
+				<tr>
+					<td>Height:</td>
+					<td><input type='text' id='height'></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<input id='ai' type='checkbox'>
+						Play against the computer
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<button id='btn_startgame' accesskey='s'><u>S</u>tart Game</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id='game'></div>
+		<div id='won'>✌</div>
+		<div id='lost'>☠</div>
+	</body>
 </html>
 
